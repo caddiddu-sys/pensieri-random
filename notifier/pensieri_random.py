@@ -64,29 +64,23 @@ def fetch_pensieri(state):
     read_url = os.environ.get("PENSIERI_READ_URL", "")
     read_key = os.environ.get("READ_KEY", "")
 
-    # Google Apps Script fa un redirect durante il quale i parametri GET vengono
-    # persi. Seguiamo il redirect manualmente e riaggiungiamo la chiave.
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "application/json, text/plain, */*",
+    }
+
     try:
-        session = requests.Session()
         url = f"{read_url}?key={read_key}"
-        resp = session.get(url, timeout=15, allow_redirects=False)
-
-        # Segui i redirect mantenendo il parametro key
-        for _ in range(5):
-            if resp.status_code not in (301, 302, 303, 307, 308):
-                break
-            location = resp.headers.get("Location", "")
-            if "?" not in location:
-                location = f"{location}?key={read_key}"
-            resp = session.get(location, timeout=15, allow_redirects=False)
-
-        print(f"HTTP {resp.status_code}, body: {resp.text[:120]!r}")
+        resp = requests.get(url, headers=headers, timeout=20, allow_redirects=True)
+        print(f"HTTP {resp.status_code}, url finale: {resp.url[:80]!r}")
+        print(f"Body preview: {resp.text[:100]!r}")
         resp.raise_for_status()
         pensieri = resp.json()
         if isinstance(pensieri, list) and len(pensieri) > 0:
             state["last_list_cache"] = pensieri
             print(f"Lista aggiornata: {len(pensieri)} pensieri.")
             return pensieri
+        print(f"Risposta non valida: {pensieri!r}")
     except Exception as e:
         print(f"Fetch lista fallito: {e}")
 
