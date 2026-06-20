@@ -3,11 +3,11 @@
   "slots": [
     {
       "time": "13:12",
-      "sent": false
+      "sent": true
     },
     {
       "time": "15:36",
-      "sent": false
+      "sent": true
     },
     {
       "time": "18:16",
@@ -17,5 +17,22 @@
       "time": "21:56",
       "sent": false
     }
+  ],
+  "last_list_cache": [
+    "Il coraggio non è assenza di paura",
+    "Ogni progetto inizia con una prima riga",
+    "Smetti di ottimizzare, inizia a fare",
+    "La chiarezza arriva facendo, non pensando",
+    "Non devi capire tutto adesso",
+    "Una cosa alla volta, fatta bene",
+    "Il silenzio è anche una risposta",
+    "Scrivi anche quando non hai voglia",
+    "Ogni idea merita almeno una riga",
+    "Riposare non è perdere tempo"
+  ],
+  "last_sent_time": "15:36",
+  "recent_hashes": [
+    "f9bc2cd1196dcb06",
+    "cf191c252c794d3b"
   ]
 }
