@@ -1,0 +1,44 @@
+name: Pensieri random
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  send-pensiero:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run notifier
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          PENSIERI_READ_URL: ${{ secrets.PENSIERI_READ_URL }}
+          READ_KEY: ${{ secrets.READ_KEY }}
+        run: python notifier/pensieri_random.py
+
+      - name: Commit state.json if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add notifier/state.json
+          if git diff --cached --quiet; then
+            echo "Nessuna modifica a state.json"
+          else
+            git commit -m "chore: aggiorna state.json"
+            git push
+          fi
