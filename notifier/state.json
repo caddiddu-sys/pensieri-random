@@ -1,1 +1,21 @@
-{}
+{
+  "date": "2026-06-20",
+  "slots": [
+    {
+      "time": "13:12",
+      "sent": false
+    },
+    {
+      "time": "15:36",
+      "sent": false
+    },
+    {
+      "time": "18:16",
+      "sent": false
+    },
+    {
+      "time": "21:56",
+      "sent": false
+    }
+  ]
+}
