@@ -3,7 +3,7 @@
   "slots": [
     {
       "time": "07:10",
-      "sent": false
+      "sent": true
     },
     {
       "time": "22:07",
@@ -23,10 +23,11 @@
     "Riposare non è perdere tempo",
     "Migliora te stesso per migliorare il mondo fuori da te."
   ],
-  "last_sent_time": "05:00",
+  "last_sent_time": "07:10",
   "recent_hashes": [
     "f9bc2cd1196dcb06",
     "cf191c252c794d3b",
-    "e3ebba946be8faf8"
+    "e3ebba946be8faf8",
+    "62bed27d0a3ce11d"
   ]
 }
