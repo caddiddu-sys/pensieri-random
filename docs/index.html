@@ -813,6 +813,7 @@
 <script>
   const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycby1-z7FyLYrGNTLQdoWj7fksVhOX7pAeG5jgplWj1sKBcf3LY_Nd-QOsK3rN6gvbBFM/exec';
   const WRITE_KEY  = 'p3BmQIeswnRyAq0A0I7S2F43Fo6z7oZZsmJddEUo';
+  const SETTINGS_CACHE_KEY = 'il-tarlo-cfg';
 
   // ── State ──
   let sendState = 'idle';   // idle | sending | success | error
@@ -857,11 +858,21 @@
   });
 
   // ── Settings config API ──
+  function getCachedConfig() {
+    try { return JSON.parse(localStorage.getItem(SETTINGS_CACHE_KEY)); } catch { return null; }
+  }
+  function setCachedConfig(cfg) {
+    try { localStorage.setItem(SETTINGS_CACHE_KEY, JSON.stringify(cfg)); } catch {}
+  }
+
   async function fetchConfig() {
     try {
       const res  = await fetch(`${WEBAPP_URL}?key=${WRITE_KEY}&action=getConfig`, { method: 'GET' });
       const data = await res.json();
-      if (typeof data.window_start !== 'undefined') return data;
+      if (typeof data.window_start !== 'undefined') {
+        setCachedConfig(data);
+        return data;
+      }
     } catch {}
     return null;
   }
@@ -905,6 +916,8 @@
   $openSettings.addEventListener('click', async () => {
     $settings.classList.add('open');
     $home.classList.add('settings-open');
+    const cached = getCachedConfig();
+    if (cached) populateConfigFields(cached);
     const cfg = await fetchConfig();
     if (cfg) populateConfigFields(cfg);
   });
@@ -919,6 +932,7 @@
     $pausedRow.classList.toggle('hidden',  !paused);
     $pausedRow.classList.toggle('visible', paused);
     const ok = await saveConfig({ paused: String(paused) });
+    if (ok) { const c = getCachedConfig(); if (c) setCachedConfig({ ...c, paused }); }
     showSettingsStatus(ok ? (paused ? 'Notifiche sospese.' : 'Notifiche riattivate.') : 'Errore. Riprova.', ok ? 'success' : 'error');
   });
 
@@ -948,6 +962,7 @@
       min_gap_minutes: gap
     });
     btn.disabled = false;
+    if (ok) setCachedConfig({ ...(getCachedConfig() || {}), window_start: start, window_end: end, min_per_day: minDay, max_per_day: maxDay, min_gap_minutes: gap, paused: $pauseToggle.checked });
     showSettingsStatus(ok ? 'Impostazioni salvate.' : 'Errore di rete. Riprova.', ok ? 'success' : 'error');
   });
 
