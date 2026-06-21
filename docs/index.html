@@ -258,6 +258,54 @@
       color: var(--surface);
       transform: scale(1.04);
     }
+    .chip-add {
+      padding: 10px 18px;
+      font-size: 20px;
+      line-height: 1;
+      border-style: dashed;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+    .chip-add:hover { color: var(--chip-hover); border-color: var(--chip-hover); }
+
+    .chip-input-wrapper {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .chip-input-wrapper.active { display: flex; }
+    .chip-new-field {
+      padding: 10px 16px;
+      border-radius: 999px;
+      border: 1.5px solid var(--gold-dark);
+      background: transparent;
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      outline: none;
+      width: 130px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .chip-new-field::placeholder { color: var(--text-muted); opacity: 1; }
+    .chip-action {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      border: 1.5px solid;
+      background: transparent;
+      cursor: pointer;
+      font-size: 15px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 150ms, color 150ms;
+    }
+    .chip-action.confirm { border-color: var(--gold-dark); color: var(--gold-dark); }
+    .chip-action.confirm:hover { background: var(--gold-dark); color: var(--surface); }
+    .chip-action.cancel { border-color: var(--border-thin); color: var(--text-muted); }
+    .chip-action.cancel:hover { border-color: var(--error); color: var(--error); }
 
     /* Send zone */
     .send-zone {
@@ -579,6 +627,12 @@
         <button class="chip" data-cat="Scrittura">Scrittura</button>
         <button class="chip" data-cat="Vita">Vita</button>
         <button class="chip" data-cat="Relazioni">Relazioni</button>
+        <div class="chip-input-wrapper" id="chip-input-wrapper">
+          <input class="chip-new-field" id="new-cat-input" type="text" maxlength="20" placeholder="Nuova categoria…" autocomplete="off" autocorrect="off" autocapitalize="words">
+          <button class="chip-action confirm" id="chip-confirm" aria-label="Conferma">✓</button>
+          <button class="chip-action cancel" id="chip-cancel" aria-label="Annulla">✗</button>
+        </div>
+        <button class="chip chip-add" id="chip-add" aria-label="Aggiungi categoria">+</button>
       </div>
     </div>
 
@@ -678,12 +732,14 @@
   let sendState = 'idle';   // idle | sending | success | error
   let category  = 'Nessuna';
 
+  // Returns live list of all selectable category chips (excludes chip-add)
+  function getAllChips() { return document.querySelectorAll('#chips-row .chip[data-cat]'); }
+
   // ── DOM refs ──
   const $home     = document.getElementById('home');
   const $settings = document.getElementById('settings');
   const $textarea = document.getElementById('thought');
   const $counter  = document.getElementById('counter');
-  const $chips    = document.querySelectorAll('.chip');
   const $sendBtn  = document.getElementById('send-btn');
   const $statusMsg = document.getElementById('status-msg');
   const $openSettings  = document.getElementById('open-settings');
@@ -708,8 +764,8 @@
   // ── Category chips ──
   document.getElementById('chips-row').addEventListener('click', e => {
     const chip = e.target.closest('.chip');
-    if (!chip) return;
-    $chips.forEach(c => c.classList.remove('selected'));
+    if (!chip || !chip.dataset.cat) return;
+    getAllChips().forEach(c => c.classList.remove('selected'));
     chip.classList.add('selected');
     category = chip.dataset.cat;
   });
@@ -786,7 +842,7 @@
     $counter.textContent = '0 / 300';
     $counter.classList.remove('warn');
     category = 'Nessuna';
-    $chips.forEach(c => {
+    getAllChips().forEach(c => {
       c.classList.toggle('selected', c.dataset.cat === 'Nessuna');
     });
   }
@@ -861,6 +917,80 @@
 
   // Initial state
   setSendState('idle');
+
+  // ── Custom categories ──
+  const BUILTIN_CATS = ['Nessuna','Lavoro','Calma','Creatività','Scrittura','Vita','Relazioni'];
+  const CUSTOM_CATS_KEY = 'tarlo_custom_cats';
+
+  function loadCustomCategories() {
+    let saved = [];
+    try { saved = JSON.parse(localStorage.getItem(CUSTOM_CATS_KEY) || '[]'); } catch {}
+    saved.forEach(name => insertChip(name));
+  }
+
+  function saveCustomCategories() {
+    const names = Array.from(getAllChips())
+      .map(c => c.dataset.cat)
+      .filter(n => !BUILTIN_CATS.includes(n));
+    localStorage.setItem(CUSTOM_CATS_KEY, JSON.stringify(names));
+  }
+
+  function insertChip(name) {
+    const chip = document.createElement('button');
+    chip.className = 'chip';
+    chip.dataset.cat = name;
+    chip.textContent = name;
+    const $wrapper = document.getElementById('chip-input-wrapper');
+    document.getElementById('chips-row').insertBefore(chip, $wrapper);
+    return chip;
+  }
+
+  function openCategoryInput() {
+    document.getElementById('chip-add').style.display = 'none';
+    document.getElementById('chip-input-wrapper').classList.add('active');
+    const input = document.getElementById('new-cat-input');
+    input.value = '';
+    input.focus();
+    const row = document.getElementById('chips-row');
+    setTimeout(() => { row.scrollLeft = row.scrollWidth; }, 50);
+  }
+
+  function closeCategoryInput() {
+    document.getElementById('chip-input-wrapper').classList.remove('active');
+    document.getElementById('chip-add').style.display = '';
+  }
+
+  function confirmNewCategory() {
+    const raw = document.getElementById('new-cat-input').value.trim();
+    if (!raw) { closeCategoryInput(); return; }
+    const name = raw.charAt(0).toUpperCase() + raw.slice(1);
+    const existing = Array.from(getAllChips()).find(
+      c => c.dataset.cat.toLowerCase() === name.toLowerCase()
+    );
+    if (existing) {
+      getAllChips().forEach(c => c.classList.remove('selected'));
+      existing.classList.add('selected');
+      category = existing.dataset.cat;
+      closeCategoryInput();
+      return;
+    }
+    const chip = insertChip(name);
+    getAllChips().forEach(c => c.classList.remove('selected'));
+    chip.classList.add('selected');
+    category = name;
+    saveCustomCategories();
+    closeCategoryInput();
+  }
+
+  document.getElementById('chip-add').addEventListener('click', openCategoryInput);
+  document.getElementById('chip-confirm').addEventListener('click', confirmNewCategory);
+  document.getElementById('chip-cancel').addEventListener('click', closeCategoryInput);
+  document.getElementById('new-cat-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); confirmNewCategory(); }
+    if (e.key === 'Escape') closeCategoryInput();
+  });
+
+  loadCustomCategories();
 </script>
 </body>
 </html>
