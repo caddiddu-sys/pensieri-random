@@ -877,6 +877,9 @@
     return null;
   }
 
+  // Pre-fetch config al caricamento pagina: pronta in memoria prima che l'utente apra Impostazioni
+  let _configPromise = fetchConfig();
+
   async function saveConfig(params) {
     const body = new URLSearchParams({ key: WRITE_KEY, action: 'setConfig', ...params });
     try {
@@ -918,8 +921,9 @@
     $home.classList.add('settings-open');
     const cached = getCachedConfig();
     if (cached) populateConfigFields(cached);
-    const cfg = await fetchConfig();
+    const cfg = await _configPromise;
     if (cfg) populateConfigFields(cfg);
+    _configPromise = fetchConfig();
   });
   $closeSettings.addEventListener('click', () => {
     $settings.classList.remove('open');
