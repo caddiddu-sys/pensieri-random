@@ -528,6 +528,78 @@
       line-height: 1.5;
     }
 
+    /* Settings editable fields */
+    .card-value-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-muted);
+      font-family: var(--sans);
+      font-size: 18px;
+      font-weight: 400;
+    }
+    .card-value-sep {
+      color: var(--text-muted);
+      user-select: none;
+    }
+    .cfg-input {
+      background: transparent;
+      border: none;
+      border-bottom: 1.5px solid transparent;
+      color: var(--text-muted);
+      font-family: var(--sans);
+      font-size: 18px;
+      font-weight: 400;
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+      outline: none;
+      padding: 2px 2px 1px;
+      cursor: text;
+      transition: border-color 200ms, color 200ms;
+      -webkit-tap-highlight-color: transparent;
+      -moz-appearance: textfield;
+    }
+    .cfg-input:focus {
+      border-bottom-color: var(--gold-dark);
+      color: var(--text);
+    }
+    .cfg-input[type="time"] { width: 70px; }
+    .cfg-input[type="number"] { width: 40px; }
+    .cfg-input::-webkit-outer-spin-button,
+    .cfg-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .cfg-input[type="time"]::-webkit-calendar-picker-indicator { display: none; }
+    .settings-save-btn {
+      width: 100%;
+      padding: 14px;
+      border-radius: 14px;
+      border: 1.5px solid var(--gold-dark);
+      background: transparent;
+      color: var(--gold-dark);
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 180ms, color 180ms;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .settings-save-btn:hover { background: var(--gold-dark); color: var(--surface); }
+    .settings-save-btn:active { opacity: 0.75; }
+    .settings-save-btn:disabled { opacity: 0.4; cursor: default; }
+    .settings-status {
+      text-align: center;
+      font-family: var(--sans);
+      font-size: 13.5px;
+      height: 18px;
+      opacity: 0;
+      transition: opacity 300ms;
+      letter-spacing: 0.02em;
+    }
+    .settings-status.visible { opacity: 1; }
+    .settings-status.success-msg { color: var(--success); }
+    .settings-status.error-msg { color: var(--error); }
+
     /* ── Responsive: mobile (≤640px) ── */
     @media (max-width: 640px) {
       .top-bar { padding: 16px 18px 12px; }
@@ -702,24 +774,38 @@
         </div>
       </div>
 
-      <!-- Info card -->
+      <!-- Rhythm card (editable) -->
       <div class="settings-card">
         <div class="section-label">Ritmo delle notifiche</div>
         <div class="card-row">
           <span class="card-label">Fascia oraria attiva</span>
-          <span class="card-value">08:00 – 22:30</span>
+          <div class="card-value-row">
+            <input class="cfg-input" id="cfg-window-start" type="time" value="08:00" aria-label="Inizio fascia oraria">
+            <span class="card-value-sep">–</span>
+            <input class="cfg-input" id="cfg-window-end" type="time" value="22:30" aria-label="Fine fascia oraria">
+          </div>
         </div>
         <div class="card-row">
           <span class="card-label">Notifiche al giorno</span>
-          <span class="card-value">2 – 4</span>
+          <div class="card-value-row">
+            <input class="cfg-input" id="cfg-min-day" type="number" min="1" max="10" value="2" aria-label="Minimo notifiche">
+            <span class="card-value-sep">–</span>
+            <input class="cfg-input" id="cfg-max-day" type="number" min="1" max="10" value="4" aria-label="Massimo notifiche">
+          </div>
         </div>
         <div class="card-row">
           <span class="card-label">Distanza minima</span>
-          <span class="card-value">90 min</span>
+          <div class="card-value-row">
+            <input class="cfg-input" id="cfg-gap" type="number" min="30" max="240" step="5" value="90" aria-label="Distanza minima in minuti">
+            <span class="card-value-sep">min</span>
+          </div>
         </div>
       </div>
 
-      <p class="footnote">Le configurazioni avanzate vivono nei file di progetto.</p>
+      <div class="settings-status" id="settings-status" aria-live="polite"></div>
+      <button class="settings-save-btn" id="settings-save-btn">Salva impostazioni</button>
+
+      <p class="footnote">Le modifiche sono attive entro 15 minuti.</p>
     </div>
   </div>
 </div>
@@ -770,25 +856,99 @@
     category = chip.dataset.cat;
   });
 
+  // ── Settings config API ──
+  async function fetchConfig() {
+    try {
+      const res  = await fetch(`${WEBAPP_URL}?key=${WRITE_KEY}&action=getConfig`, { method: 'GET' });
+      const data = await res.json();
+      if (typeof data.window_start !== 'undefined') return data;
+    } catch {}
+    return null;
+  }
+
+  async function saveConfig(params) {
+    const body = new URLSearchParams({ key: WRITE_KEY, action: 'setConfig', ...params });
+    try {
+      const res  = await fetch(WEBAPP_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString()
+      });
+      const data = await res.json();
+      return data.ok === true;
+    } catch { return false; }
+  }
+
+  function populateConfigFields(cfg) {
+    document.getElementById('cfg-window-start').value = cfg.window_start || '08:00';
+    document.getElementById('cfg-window-end').value   = cfg.window_end   || '22:30';
+    document.getElementById('cfg-min-day').value      = cfg.min_per_day     ?? 2;
+    document.getElementById('cfg-max-day').value      = cfg.max_per_day     ?? 4;
+    document.getElementById('cfg-gap').value          = cfg.min_gap_minutes ?? 90;
+    $pauseToggle.checked = !!cfg.paused;
+    $pausedRow.classList.toggle('hidden',  !cfg.paused);
+    $pausedRow.classList.toggle('visible', !!cfg.paused);
+  }
+
+  function showSettingsStatus(text, type) {
+    const el = document.getElementById('settings-status');
+    el.textContent = text;
+    el.className = 'settings-status';
+    if (text) {
+      el.classList.add('visible');
+      if (type) el.classList.add(type + '-msg');
+      setTimeout(() => { el.classList.remove('visible'); }, 2800);
+    }
+  }
+
   // ── Settings open/close ──
-  $openSettings.addEventListener('click', () => {
+  $openSettings.addEventListener('click', async () => {
     $settings.classList.add('open');
     $home.classList.add('settings-open');
+    const cfg = await fetchConfig();
+    if (cfg) populateConfigFields(cfg);
   });
   $closeSettings.addEventListener('click', () => {
     $settings.classList.remove('open');
     $home.classList.remove('settings-open');
   });
 
-  // ── Pause toggle ──
-  $pauseToggle.addEventListener('change', () => {
-    if ($pauseToggle.checked) {
-      $pausedRow.classList.remove('hidden');
-      $pausedRow.classList.add('visible');
-    } else {
-      $pausedRow.classList.add('hidden');
-      $pausedRow.classList.remove('visible');
+  // ── Pause toggle — salva subito ──
+  $pauseToggle.addEventListener('change', async () => {
+    const paused = $pauseToggle.checked;
+    $pausedRow.classList.toggle('hidden',  !paused);
+    $pausedRow.classList.toggle('visible', paused);
+    const ok = await saveConfig({ paused: String(paused) });
+    showSettingsStatus(ok ? (paused ? 'Notifiche sospese.' : 'Notifiche riattivate.') : 'Errore. Riprova.', ok ? 'success' : 'error');
+  });
+
+  // ── Salva impostazioni ──
+  document.getElementById('settings-save-btn').addEventListener('click', async () => {
+    const start  = document.getElementById('cfg-window-start').value;
+    const end    = document.getElementById('cfg-window-end').value;
+    const minDay = parseInt(document.getElementById('cfg-min-day').value, 10);
+    const maxDay = parseInt(document.getElementById('cfg-max-day').value, 10);
+    const gap    = parseInt(document.getElementById('cfg-gap').value, 10);
+
+    if (!start || !end || start >= end) {
+      showSettingsStatus('Fascia oraria non valida.', 'error'); return;
     }
+    if (isNaN(minDay) || isNaN(maxDay) || minDay < 1 || maxDay < minDay || maxDay > 10) {
+      showSettingsStatus('Numero notifiche non valido.', 'error'); return;
+    }
+    if (isNaN(gap) || gap < 30 || gap > 240) {
+      showSettingsStatus('Distanza minima non valida (30–240 min).', 'error'); return;
+    }
+
+    const btn = document.getElementById('settings-save-btn');
+    btn.disabled = true;
+    const ok = await saveConfig({
+      window_start: start, window_end: end,
+      min_per_day: minDay, max_per_day: maxDay,
+      min_gap_minutes: gap
+    });
+    btn.disabled = false;
+    showSettingsStatus(ok ? 'Impostazioni salvate.' : 'Errore di rete. Riprova.', ok ? 'success' : 'error');
   });
 
   // ── Send button state machine ──

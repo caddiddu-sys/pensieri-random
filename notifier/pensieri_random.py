@@ -5,16 +5,17 @@ import random
 import requests
 from datetime import datetime, date
 
-# --- Parametri configurabili ---
-WINDOW_START = "08:00"
-WINDOW_END = "22:30"
-MIN_PER_DAY = 2
-MAX_PER_DAY = 4
-MIN_GAP_MINUTES = 90
 NO_REPEAT_DAYS = 7
-PAUSED = False
-
 STATE_FILE = os.path.join(os.path.dirname(__file__), "state.json")
+
+CONFIG_DEFAULTS = {
+    "paused": False,
+    "window_start": "08:00",
+    "window_end": "22:30",
+    "min_per_day": 2,
+    "max_per_day": 4,
+    "min_gap_minutes": 90,
+}
 
 
 def load_state():
@@ -41,15 +42,15 @@ def minutes_to_time(m):
     return f"{m // 60:02d}:{m % 60:02d}"
 
 
-def generate_slots():
-    start = time_to_minutes(WINDOW_START)
-    end = time_to_minutes(WINDOW_END)
-    n = random.randint(MIN_PER_DAY, MAX_PER_DAY)
+def generate_slots(window_start, window_end, min_per_day, max_per_day, min_gap_minutes):
+    start = time_to_minutes(window_start)
+    end   = time_to_minutes(window_end)
+    n     = random.randint(min_per_day, max_per_day)
     slots = []
     attempts = 0
     while len(slots) < n and attempts < 1000:
         t = random.randint(start, end)
-        if all(abs(t - s) >= MIN_GAP_MINUTES for s in slots):
+        if all(abs(t - s) >= min_gap_minutes for s in slots):
             slots.append(t)
         attempts += 1
     slots.sort()
@@ -58,6 +59,35 @@ def generate_slots():
 
 def hash_text(text):
     return hashlib.sha256(text.encode()).hexdigest()[:16]
+
+
+def fetch_config():
+    """Legge la config da Apps Script. Falls back ai valori di default."""
+    read_url = os.environ.get("PENSIERI_READ_URL", "")
+    read_key = os.environ.get("READ_KEY", "")
+    if not read_url or not read_key:
+        return CONFIG_DEFAULTS.copy()
+    try:
+        url  = f"{read_url}?key={read_key}&action=getConfig"
+        resp = requests.get(
+            url,
+            headers={"User-Agent": "Mozilla/5.0", "Accept": "application/json"},
+            timeout=15,
+            allow_redirects=True,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        if isinstance(data, dict) and "window_start" in data:
+            print(f"Config caricata: {data}")
+            # Merge con defaults per eventuali chiavi mancanti
+            merged = CONFIG_DEFAULTS.copy()
+            merged.update(data)
+            return merged
+        print(f"Config non valida: {data!r}")
+    except Exception as ex:
+        print(f"Fetch config fallito: {ex}")
+    print("Uso config di default.")
+    return CONFIG_DEFAULTS.copy()
 
 
 def fetch_pensieri(state):
@@ -70,7 +100,7 @@ def fetch_pensieri(state):
     }
 
     try:
-        url = f"{read_url}?key={read_key}"
+        url  = f"{read_url}?key={read_key}"
         resp = requests.get(url, headers=headers, timeout=20, allow_redirects=True)
         print(f"HTTP {resp.status_code}, url finale: {resp.url[:80]!r}")
         print(f"Body preview: {resp.text[:100]!r}")
@@ -118,19 +148,26 @@ def choose_pensiero(pensieri, recent_hashes):
 
 
 def main():
-    if PAUSED:
+    config = fetch_config()
+
+    if config.get("paused", False):
         print("Sistema in pausa. Nessuna notifica inviata.")
         return
+
+    window_start    = config.get("window_start",    CONFIG_DEFAULTS["window_start"])
+    window_end      = config.get("window_end",      CONFIG_DEFAULTS["window_end"])
+    min_per_day     = int(config.get("min_per_day",    CONFIG_DEFAULTS["min_per_day"]))
+    max_per_day     = int(config.get("max_per_day",    CONFIG_DEFAULTS["max_per_day"]))
+    min_gap_minutes = int(config.get("min_gap_minutes", CONFIG_DEFAULTS["min_gap_minutes"]))
 
     state = load_state()
     today = date.today().isoformat()
     now_minutes = datetime.now().hour * 60 + datetime.now().minute
 
-    # Nuovo giorno: genera slot casuali
     if state.get("date") != today:
         print(f"Nuovo giorno: {today}. Genero slot.")
-        state["date"] = today
-        state["slots"] = generate_slots()
+        state["date"]  = today
+        state["slots"] = generate_slots(window_start, window_end, min_per_day, max_per_day, min_gap_minutes)
         print(f"Slot: {[s['time'] for s in state['slots']]}")
 
     pensieri = fetch_pensieri(state)
@@ -139,7 +176,7 @@ def main():
         return
 
     recent_hashes = state.get("recent_hashes", [])
-    end_minutes = time_to_minutes(WINDOW_END)
+    end_minutes   = time_to_minutes(window_end)
     state_changed = False
 
     for slot in state["slots"]:
@@ -148,33 +185,28 @@ def main():
 
         slot_minutes = time_to_minutes(slot["time"])
 
-        # Slot nel futuro: skip
         if slot_minutes > now_minutes:
             continue
 
-        # Fuori dalla finestra giornaliera: salta senza recuperare
         if now_minutes > end_minutes:
             print(f"Slot {slot['time']} fuori finestra. Salto.")
             slot["sent"] = True
             state_changed = True
             continue
 
-        # Verifica distanza minima dall'ultimo invio
         last_sent = state.get("last_sent_time")
         if last_sent:
             gap = now_minutes - time_to_minutes(last_sent)
-            if gap < MIN_GAP_MINUTES:
-                print(f"Gap insufficiente ({gap} min < {MIN_GAP_MINUTES}). Aspetto.")
+            if gap < min_gap_minutes:
+                print(f"Gap insufficiente ({gap} min < {min_gap_minutes}). Aspetto.")
                 continue
 
-        # Scegli e invia
         pensiero = choose_pensiero(pensieri, recent_hashes)
         if pensiero and send_notification(pensiero):
             slot["sent"] = True
             state["last_sent_time"] = slot["time"]
             recent_hashes.append(hash_text(pensiero))
-            # Conserva solo gli hash degli ultimi NO_REPEAT_DAYS * MAX_PER_DAY invii
-            state["recent_hashes"] = recent_hashes[-(NO_REPEAT_DAYS * MAX_PER_DAY):]
+            state["recent_hashes"] = recent_hashes[-(NO_REPEAT_DAYS * max_per_day):]
             state_changed = True
 
     if state_changed or "last_list_cache" in state:
