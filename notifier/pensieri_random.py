@@ -78,16 +78,16 @@ def fetch_config():
         resp.raise_for_status()
         data = resp.json()
         if isinstance(data, dict) and "window_start" in data:
-            print(f"Config caricata: {data}")
-            # Merge con defaults per eventuali chiavi mancanti
             merged = CONFIG_DEFAULTS.copy()
             merged.update(data)
+            print(f"Config remota: {merged}")
             return merged
         print(f"Config non valida: {data!r}")
     except Exception as ex:
         print(f"Fetch config fallito: {ex}")
-    print("Uso config di default.")
-    return CONFIG_DEFAULTS.copy()
+    defaults = CONFIG_DEFAULTS.copy()
+    print(f"[ATTENZIONE] Uso config di DEFAULT: {defaults}")
+    return defaults
 
 
 def fetch_pensieri(state):
@@ -168,7 +168,10 @@ def main():
         print(f"Nuovo giorno: {today}. Genero slot.")
         state["date"]  = today
         state["slots"] = generate_slots(window_start, window_end, min_per_day, max_per_day, min_gap_minutes)
-        print(f"Slot: {[s['time'] for s in state['slots']]}")
+        n_slots = len(state["slots"])
+        print(f"Slot generati: {[s['time'] for s in state['slots']]} (n={n_slots}, gap={min_gap_minutes}min, finestra={window_start}-{window_end})")
+        if n_slots < min_per_day:
+            print(f"[ATTENZIONE] Solo {n_slots} slot generati su min_per_day={min_per_day}. Finestra troppo stretta?")
 
     pensieri = fetch_pensieri(state)
     if not pensieri:

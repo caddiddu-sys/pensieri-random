@@ -1,15 +1,6 @@
 {
-  "date": "2026-06-21",
-  "slots": [
-    {
-      "time": "07:10",
-      "sent": true
-    },
-    {
-      "time": "22:07",
-      "sent": false
-    }
-  ],
+  "date": "2026-06-20",
+  "slots": [],
   "last_list_cache": [
     "Smetti di ottimizzare, inizia a fare",
     "Una cosa alla volta, fatta bene",
