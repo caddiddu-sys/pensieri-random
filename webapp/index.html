@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>il Tarlo</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1C1710">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="il Tarlo">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* ── Design tokens ── */
+    :root {
+      --bg:          #14100B;
+      --surface:     #1C1710;
+      --card:        #251E14;
+      --border-hair: #2c2417;
+      --border-thin: #3a2e1d;
+      --text:        #E8DCC8;
+      --text-muted:  #8C7D6A;
+      --brown:       #6B4226;
+      --gold:        #C9A84C;
+      --gold-light:  #E8C97A;
+      --gold-dark:   #A07830;
+      --success:     #8BB07A;
+      --error:       #C07040;
+      --purple:      #7B5EA7;
+      --chip-hover:  #A98BD4;
+      --serif:       'Cormorant Garamond', serif;
+      --sans:        'Inter', sans-serif;
+    }
+
+    /* ── Reset ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+    }
+
+    /* ── Keyframes ── */
+    @keyframes pn-fadeup {
+      from { opacity: 0; transform: translateY(9px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pn-logoin {
+      from { opacity: 0; transform: scale(0.93); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    @keyframes pn-spin {
+      to { transform: rotate(360deg); }
+    }
+    @keyframes pn-pulse {
+      0%, 100% { box-shadow: 0 8px 24px rgba(201,168,76,0.28); }
+      50%       { box-shadow: 0 8px 34px rgba(201,168,76,0.55); }
+    }
+    @keyframes pn-pulse-success {
+      0%, 100% { box-shadow: 0 8px 24px rgba(139,176,122,0.3); }
+      50%       { box-shadow: 0 8px 34px rgba(139,176,122,0.55); }
+    }
+    @keyframes pn-pop {
+      0%   { transform: scale(0); }
+      70%  { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+    @keyframes pn-shake {
+      0%,100% { transform: translateX(0); }
+      20%      { transform: translateX(-4px); }
+      40%      { transform: translateX(4px); }
+      60%      { transform: translateX(-2px); }
+      80%      { transform: translateX(2px); }
+    }
+    @keyframes pn-msgin {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── App shell ── */
+    #app {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: var(--surface);
+      overflow: hidden;
+    }
+
+    /* ── Grain overlay (decorative) ── */
+    #app::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.05;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Screen base ── */
+    .screen {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      transition: transform 300ms ease-out, opacity 300ms ease-out;
+      z-index: 1;
+    }
+
+    /* ── HOME screen ── */
+    #home {
+      background: var(--surface);
+    }
+    #home.settings-open {
+      transform: translateX(-26px);
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    /* Top bar */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px 16px;
+      flex-shrink: 0;
+      animation: pn-logoin 320ms ease-out both;
+    }
+    .top-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .logo-svg {
+      width: 40px;
+      height: 40px;
+      filter: drop-shadow(0 0 6px rgba(232,201,122,0.45));
+      flex-shrink: 0;
+    }
+    .wordmark {
+      font-family: var(--serif);
+      font-size: 26px;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      color: var(--text);
+    }
+    .icon-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: color 160ms, background 160ms;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .icon-btn:hover {
+      color: var(--gold-light);
+      background: var(--card);
+    }
+
+    /* Writing area */
+    .writing-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 12px 20px 8px;
+      gap: 14px;
+      animation: pn-fadeup 480ms ease-out 60ms both;
+    }
+    .field-wrapper {
+      position: relative;
+    }
+    textarea#thought {
+      width: 100%;
+      min-height: 36vh;
+      padding: 20px 20px 40px;
+      background: var(--card);
+      border: 1.5px solid var(--brown);
+      border-radius: 18px;
+      color: var(--text);
+      font-family: var(--serif);
+      font-size: clamp(22px, 3vw, 32px);
+      font-weight: 400;
+      line-height: 1.45;
+      resize: none;
+      outline: none;
+      transition: min-height 220ms ease-out, border-color 200ms, box-shadow 200ms;
+      -webkit-appearance: none;
+      scrollbar-width: none;
+    }
+    textarea#thought::-webkit-scrollbar { display: none; }
+    textarea#thought::placeholder {
+      font-style: italic;
+      color: var(--text-muted);
+    }
+    textarea#thought:focus {
+      min-height: 42vh;
+      border-color: var(--gold);
+      box-shadow: 0 0 0 4px rgba(201,168,76,0.22);
+    }
+    .char-counter {
+      position: absolute;
+      bottom: 14px;
+      right: 18px;
+      font-family: var(--sans);
+      font-size: 14px;
+      font-weight: 400;
+      letter-spacing: 0.05em;
+      font-variant-numeric: tabular-nums;
+      color: var(--text-muted);
+      pointer-events: none;
+      transition: color 160ms;
+    }
+    .char-counter.warn { color: var(--error); }
+
+    /* Category chips */
+    .chips-row {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .chips-row::-webkit-scrollbar { display: none; }
+    .chip {
+      flex-shrink: 0;
+      padding: 13px 27px;
+      border-radius: 999px;
+      border: 1.5px solid var(--border-thin);
+      background: transparent;
+      color: var(--text-muted);
+      font-family: var(--sans);
+      font-size: 13.5px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: transform 150ms, background 160ms, border-color 160ms, color 160ms;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .chip:hover { border-color: var(--chip-hover); }
+    .chip.selected {
+      background: var(--gold-dark);
+      border-color: var(--gold-dark);
+      color: var(--surface);
+      transform: scale(1.04);
+    }
+
+    /* Send zone */
+    .send-zone {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 20px 32px;
+      gap: 12px;
+      flex-shrink: 0;
+      animation: pn-fadeup 540ms ease-out 120ms both;
+    }
+    .status-msg {
+      height: 22px;
+      font-family: var(--sans);
+      font-size: 16px;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+      text-align: center;
+    }
+    .status-msg.visible {
+      animation: pn-msgin 250ms ease-out both;
+    }
+    .status-msg.success-msg { color: var(--success); }
+    .status-msg.error-msg   { color: var(--error); }
+
+    .send-btn {
+      width: 96px;
+      height: 96px;
+      border-radius: 999px;
+      border: none;
+      background: var(--gold);
+      color: var(--surface);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 24px rgba(201,168,76,0.28);
+      transition: transform 180ms, box-shadow 180ms, background 200ms, opacity 200ms;
+      -webkit-tap-highlight-color: transparent;
+      position: relative;
+      overflow: hidden;
+    }
+    .send-btn:not(.disabled):hover {
+      transform: scale(1.06);
+      box-shadow: 0 10px 34px rgba(201,168,76,0.45);
+    }
+    .send-btn.disabled {
+      opacity: 0.4;
+      box-shadow: none;
+      cursor: default;
+      pointer-events: none;
+    }
+    .send-btn.sending {
+      animation: pn-pulse 1.2s ease-in-out infinite;
+    }
+    .send-btn.success {
+      background: var(--success);
+      box-shadow: 0 8px 24px rgba(139,176,122,0.3);
+    }
+    .send-btn.error {
+      background: var(--error);
+      box-shadow: 0 8px 24px rgba(192,112,64,0.3);
+      animation: pn-shake 350ms ease-out both;
+    }
+    .send-btn svg {
+      pointer-events: none;
+    }
+    .send-btn .icon-send,
+    .send-btn .icon-spinner,
+    .send-btn .icon-check,
+    .send-btn .icon-x {
+      position: absolute;
+      transition: opacity 160ms;
+    }
+    .send-btn .icon-spinner {
+      animation: pn-spin 800ms linear infinite;
+    }
+    .send-btn .icon-check {
+      animation: pn-pop 350ms cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+
+    /* ── SETTINGS screen ── */
+    #settings {
+      background: var(--surface);
+      transform: translateX(100%);
+    }
+    #settings.open {
+      transform: translateX(0);
+    }
+
+    .settings-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 20px 24px 16px;
+      flex-shrink: 0;
+    }
+    .settings-title {
+      font-family: var(--serif);
+      font-size: 34px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      color: var(--text);
+    }
+    .settings-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 20px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .settings-card {
+      background: var(--card);
+      border-radius: 22px;
+      border: 1px solid var(--border-hair);
+      overflow: hidden;
+    }
+    .card-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 20px;
+    }
+    .card-row + .card-row {
+      border-top: 1px solid var(--border-hair);
+    }
+    .card-title {
+      font-family: var(--serif);
+      font-size: 26px;
+      font-weight: 400;
+      color: var(--text);
+    }
+    .card-label {
+      font-family: var(--sans);
+      font-size: 17px;
+      font-weight: 400;
+      color: var(--text);
+    }
+    .card-value {
+      font-family: var(--sans);
+      font-size: 18px;
+      font-weight: 400;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Pause suspended row */
+    .paused-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 20px 16px;
+      border-top: 1px solid var(--border-hair);
+    }
+    .paused-row.hidden { display: none; }
+    .paused-row.visible { animation: pn-msgin 250ms ease-out both; }
+    .paused-label {
+      font-family: var(--sans);
+      font-size: 15px;
+      color: var(--text-muted);
+    }
+
+    /* Section label */
+    .section-label {
+      padding: 18px 20px 6px;
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 400;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--brown);
+    }
+
+    /* Toggle pill */
+    .toggle {
+      position: relative;
+      width: 62px;
+      height: 36px;
+      flex-shrink: 0;
+    }
+    .toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+      position: absolute;
+    }
+    .toggle-track {
+      display: block;
+      width: 62px;
+      height: 36px;
+      border-radius: 999px;
+      background: var(--border-thin);
+      cursor: pointer;
+      transition: background 220ms;
+      position: relative;
+    }
+    .toggle-knob {
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      background: var(--text);
+      transition: transform 220ms cubic-bezier(0.34,1.2,0.64,1);
+      pointer-events: none;
+    }
+    .toggle input:checked ~ .toggle-track { background: var(--purple); }
+    .toggle input:checked ~ .toggle-knob  { transform: translateX(26px); }
+
+    /* Footnote */
+    .footnote {
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: 15px;
+      color: var(--brown);
+      padding: 4px 8px;
+      line-height: 1.5;
+    }
+
+    /* ── Responsive: mobile (≤640px) ── */
+    @media (max-width: 640px) {
+      .top-bar { padding: 16px 18px 12px; }
+      .logo-svg { width: 30px; height: 30px; }
+      .wordmark { font-size: 19px; letter-spacing: 0.16em; }
+      .writing-area { padding: 8px 16px 6px; gap: 10px; }
+      textarea#thought {
+        min-height: 170px;
+        padding: 16px 16px 36px;
+        font-size: 22px;
+        border-radius: 12px;
+      }
+      textarea#thought:focus { min-height: 210px; }
+      textarea#thought:focus { box-shadow: 0 0 0 3px rgba(201,168,76,0.22); }
+      .char-counter { font-size: 11px; bottom: 10px; right: 14px; }
+      .chip { padding: 8px 16px; font-size: 11.5px; gap: 9px; }
+      .chips-row { gap: 9px; }
+      .send-zone { padding: 12px 16px 28px; gap: 10px; }
+      .status-msg { font-size: 13.5px; }
+      .send-btn { width: 66px; height: 66px; }
+      .send-btn .icon-send svg  { width: 26px; height: 26px; }
+      .send-btn .icon-check svg { width: 28px; height: 28px; }
+      .send-btn .icon-x svg,
+      .send-btn .icon-spinner svg { width: 24px; height: 24px; }
+      .settings-header { padding: 16px 18px 12px; }
+      .settings-title { font-size: 24px; }
+      .settings-body { padding: 6px 16px 28px; gap: 12px; }
+      .settings-card { border-radius: 18px; }
+      .card-row { padding: 14px 16px; }
+      .card-title { font-size: 20px; }
+      .card-label { font-size: 14px; }
+      .card-value { font-size: 15px; }
+      .paused-row { padding: 10px 16px 14px; }
+      .paused-label { font-size: 13px; }
+      .section-label { font-size: 11px; padding: 14px 16px 4px; }
+      .toggle { width: 52px; height: 30px; }
+      .toggle-track { width: 52px; height: 30px; }
+      .toggle-knob { width: 24px; height: 24px; top: 3px; left: 3px; }
+      .toggle input:checked ~ .toggle-knob { transform: translateX(22px); }
+      .footnote { font-size: 13px; }
+      .icon-btn { width: 36px; height: 36px; border-radius: 12px; }
+    }
+
+    /* ── Desktop centering (≥641px) ── */
+    @media (min-width: 641px) {
+      #app {
+        max-width: 980px;
+        margin: 0 auto;
+      }
+      #settings .settings-body {
+        max-width: 740px;
+        margin: 0 auto;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <!-- HOME SCREEN -->
+  <div id="home" class="screen">
+    <div class="top-bar">
+      <div class="top-bar-left">
+        <svg class="logo-svg" viewBox="0 0 1254 1254" xmlns="http://www.w3.org/2000/svg" fill="#E8C97A">
+          <path d="M871.47,699.85c5.15,23.19-26.3,9.04-48.21,30.19-15.05,14.53-19.1,37.09-8.32,54.76,10.75,17.63,29.88,24.16,51.23,20.14,7.31-.53,9.66,11.87,10.18,18.17,2.92,35.33,39.31,56.54,72.5,46.54,2.77-.83,9.1-.49,10.84,1.23,2.1,2.07,3.07,8.65,1.89,11.77-12.03,31.9-6.38,67.45,19.03,90.54,5.45,4.95,8.65,11.08,8.09,18.61-1.32,17.57-40.23,12.51-47.48,52.58-.58,3.2-6.27,8.57-10.31,8.57l-575.03-.04c-45.55-6.44-76.09-41.07-81.38-86.78l.66-701.11c.05-48.38,45.19-77.76,88.79-80.07l500.79-26.62c10.69-.57,18.98,7,20.14,15.55,1.01,7.41-5.19,18.82-15.61,19.39l-514.96,28.3c-26.77,1.47-44.3,26.66-44.93,49.41-.61,22.13,17.96,50.58,45.59,50.62l591.31.87c-.2,20.02,5.17,36.09,20.08,48.72,3.77,3.19,1.71,15.26-3.36,17.11-25.98,9.48-43.1,32.78-42.62,59.7.47,25.89,18.3,49.35,44.46,57.54,4.49,1.41,10.83,5.5,11.71,9.05,1.31,5.27-1.7,11.33-5.27,15.72-29.38,36.18-4.07,75.94-11.21,84.81-6.73,8.35-39.97-9.03-70.81,22.01-16.46,16.56-23.17,38.51-17.79,62.72ZM780.88,451.71c0-11.34-9.2-20.54-20.54-20.54s-20.54,9.2-20.54,20.54,9.2,20.54,20.54,20.54,20.54-9.2,20.54-20.54ZM881.34,520.83c0-11.45-9.28-20.73-20.73-20.73s-20.73,9.28-20.73,20.73,9.28,20.73,20.73,20.73,20.73-9.28,20.73-20.73ZM665.07,940.19l-11.63-7.26c3.62-20.65-4.47-39.39-20.96-51.9,10.63-18.51,8.32-39.36-4.16-57.37,16.2-14.18,18.92-34.02,12.33-54.1,19.07-9.64,30.29-27.08,30.89-48.57,18.98-1.63,36.59-10.96,43.51-28.32-39.18-32.56-56.85-89.98-23.32-130.02-15.43,45.83-4.51,93.17,31.65,123.73,16.86,14.25,32.16-9.19,62.6-7.17,14.71.97,35.32-5.98,39.44-21.22,9.23-34.17-3.56-68.08-30.95-89.09-23.55-18.07-54.79-26.53-84.23-22.28l-26.85,3.88c-28.77,4.16-61.42,16.37-81.14,37.95-6.75,7.39-9.1,10.09-17.46,15.46-24.57,15.81-46.06,41.75-55.21,69.56-3.31,10.06-5.6,15.45-10.87,23.87-16.43,26.21-23.26,58.79-19.91,89.91-3.41,36.17.46,72.51,20.28,103.9,10.05,31.67,29.38,59.62,57.11,78.13,29.74-1.66,52.96-14.48,73.13-35.32-1.69,29.33-34.26,40.9-64.81,38.93,24.19,30.3,92.72,50.93,106.97,29.62,12.84-19.21-14.53-54.9-26.43-62.33ZM799.1,855.09c0-20.36-16.5-36.86-36.86-36.86s-36.86,16.5-36.86,36.86,16.5,36.86,36.86,36.86,36.86-16.5,36.86-36.86ZM862.36,972.77c0-16.21-13.14-29.34-29.34-29.34s-29.34,13.14-29.34,29.34,13.14,29.34,29.34,29.34,29.34-13.14,29.34-29.34Z"/>
+          <g>
+            <path d="M970.5,280.24c-.92-8.47-9.78-17.66-20.36-17.33l-480.22,15.95c-10.33,2.17-118.75-.67-113.13,11.85,41.25,17.9,532.49,4.13,593.46,9.59,11.1.34,21.52-8.98,20.25-20.06Z"/>
+            <path d="M360.49,256.76c16.96,8.63,33.59,2.11,50.69,1.74.17,0,50.15.66,50.31.65,106.37-6.86,363.64,3.97,468.79-14.44,2.88-3.21,6.09-8.7,5.66-13.64-.73-8.46-9.43-17.48-19.95-16.89,0,0-515.23,28.74-515.23,28.74s-38.16,2.76-38.16,2.76c-5.73.23-7.48,8.72-2.11,11.07Z"/>
+          </g>
+          <path d="M617.55,824.79c-36.02,17.81-81.77,9.83-103.31-24.47,33.4,20.06,65.74,27.1,103.31,24.47Z"/>
+          <path d="M624.16,764.41c-21.15,2.03-39.08-5.73-55.45-15.51-15.39-11.39-29.27-24.74-30.91-45.76,22.59,30.22,51.46,49.7,86.36,61.27Z"/>
+          <path d="M652.24,709.08c-28.47-7.69-46.68-31.74-56-58.89l.25-31.14,8.47,30.04c11.47,23.04,27.01,40.8,47.28,59.99Z"/>
+          <path d="M620.62,887.08c-20.43,24.47-60.96,31.64-87.15,7.94,29.97,6.03,56.72,3.27,87.15-7.94Z"/>
+          <circle cx="763.2" cy="611.08" r="32.64"/>
+        </svg>
+        <span class="wordmark">il Tarlo</span>
+      </div>
+      <button class="icon-btn" id="open-settings" aria-label="Impostazioni">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="writing-area">
+      <div class="field-wrapper">
+        <textarea id="thought" maxlength="300" placeholder="Scrivi o detta un pensiero…" rows="1"></textarea>
+        <span class="char-counter" id="counter">0 / 300</span>
+      </div>
+      <div class="chips-row" id="chips-row">
+        <button class="chip selected" data-cat="Nessuna">Nessuna</button>
+        <button class="chip" data-cat="Lavoro">Lavoro</button>
+        <button class="chip" data-cat="Calma">Calma</button>
+        <button class="chip" data-cat="Creatività">Creatività</button>
+        <button class="chip" data-cat="Scrittura">Scrittura</button>
+        <button class="chip" data-cat="Vita">Vita</button>
+        <button class="chip" data-cat="Relazioni">Relazioni</button>
+      </div>
+    </div>
+
+    <div class="send-zone">
+      <div class="status-msg" id="status-msg"></div>
+      <button class="send-btn disabled" id="send-btn" aria-label="Invia pensiero">
+        <!-- idle: up arrow -->
+        <span class="icon-send">
+          <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="19" x2="12" y2="5"/>
+            <polyline points="5 12 12 5 19 12"/>
+          </svg>
+        </span>
+        <!-- sending: spinner -->
+        <span class="icon-spinner" style="display:none">
+          <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+          </svg>
+        </span>
+        <!-- success: checkmark -->
+        <span class="icon-check" style="display:none">
+          <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </span>
+        <!-- error: X -->
+        <span class="icon-x" style="display:none">
+          <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </span>
+      </button>
+    </div>
+  </div>
+
+  <!-- SETTINGS SCREEN -->
+  <div id="settings" class="screen">
+    <div class="settings-header">
+      <button class="icon-btn" id="close-settings" aria-label="Torna indietro">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"/>
+          <polyline points="12 19 5 12 12 5"/>
+        </svg>
+      </button>
+      <span class="settings-title">Impostazioni</span>
+    </div>
+
+    <div class="settings-body">
+      <!-- Pause card -->
+      <div class="settings-card">
+        <div class="card-row">
+          <span class="card-title">Pausa notifiche</span>
+          <label class="toggle" aria-label="Attiva pausa notifiche">
+            <input type="checkbox" id="pause-toggle">
+            <span class="toggle-track"></span>
+            <span class="toggle-knob"></span>
+          </label>
+        </div>
+        <div class="paused-row hidden" id="paused-row">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7B5EA7" stroke-width="1.8" stroke-linecap="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="10" y1="15" x2="10" y2="9"/>
+            <line x1="14" y1="15" x2="14" y2="9"/>
+          </svg>
+          <span class="paused-label">Notifiche sospese</span>
+        </div>
+      </div>
+
+      <!-- Info card -->
+      <div class="settings-card">
+        <div class="section-label">Ritmo delle notifiche</div>
+        <div class="card-row">
+          <span class="card-label">Fascia oraria attiva</span>
+          <span class="card-value">08:00 – 22:30</span>
+        </div>
+        <div class="card-row">
+          <span class="card-label">Notifiche al giorno</span>
+          <span class="card-value">2 – 4</span>
+        </div>
+        <div class="card-row">
+          <span class="card-label">Distanza minima</span>
+          <span class="card-value">90 min</span>
+        </div>
+      </div>
+
+      <p class="footnote">Le configurazioni avanzate vivono nei file di progetto.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycby1-z7FyLYrGNTLQdoWj7fksVhOX7pAeG5jgplWj1sKBcf3LY_Nd-QOsK3rN6gvbBFM/exec';
+  const WRITE_KEY  = 'p3BmQIeswnRyAq0A0I7S2F43Fo6z7oZZsmJddEUo';
+
+  // ── State ──
+  let sendState = 'idle';   // idle | sending | success | error
+  let category  = 'Nessuna';
+
+  // ── DOM refs ──
+  const $home     = document.getElementById('home');
+  const $settings = document.getElementById('settings');
+  const $textarea = document.getElementById('thought');
+  const $counter  = document.getElementById('counter');
+  const $chips    = document.querySelectorAll('.chip');
+  const $sendBtn  = document.getElementById('send-btn');
+  const $statusMsg = document.getElementById('status-msg');
+  const $openSettings  = document.getElementById('open-settings');
+  const $closeSettings = document.getElementById('close-settings');
+  const $pauseToggle   = document.getElementById('pause-toggle');
+  const $pausedRow     = document.getElementById('paused-row');
+
+  // Button icons
+  const $iconSend    = $sendBtn.querySelector('.icon-send');
+  const $iconSpinner = $sendBtn.querySelector('.icon-spinner');
+  const $iconCheck   = $sendBtn.querySelector('.icon-check');
+  const $iconX       = $sendBtn.querySelector('.icon-x');
+
+  // ── Textarea / counter ──
+  $textarea.addEventListener('input', () => {
+    const len = $textarea.value.length;
+    $counter.textContent = `${len} / 300`;
+    $counter.classList.toggle('warn', len >= 280);
+    updateSendBtn();
+  });
+
+  // ── Category chips ──
+  document.getElementById('chips-row').addEventListener('click', e => {
+    const chip = e.target.closest('.chip');
+    if (!chip) return;
+    $chips.forEach(c => c.classList.remove('selected'));
+    chip.classList.add('selected');
+    category = chip.dataset.cat;
+  });
+
+  // ── Settings open/close ──
+  $openSettings.addEventListener('click', () => {
+    $settings.classList.add('open');
+    $home.classList.add('settings-open');
+  });
+  $closeSettings.addEventListener('click', () => {
+    $settings.classList.remove('open');
+    $home.classList.remove('settings-open');
+  });
+
+  // ── Pause toggle ──
+  $pauseToggle.addEventListener('change', () => {
+    if ($pauseToggle.checked) {
+      $pausedRow.classList.remove('hidden');
+      $pausedRow.classList.add('visible');
+    } else {
+      $pausedRow.classList.add('hidden');
+      $pausedRow.classList.remove('visible');
+    }
+  });
+
+  // ── Send button state machine ──
+  function updateSendBtn() {
+    const canSend = $textarea.value.trim().length >= 10 && sendState === 'idle';
+    $sendBtn.classList.toggle('disabled', !canSend);
+  }
+
+  function setSendState(state) {
+    sendState = state;
+    $sendBtn.classList.remove('sending', 'success', 'error', 'disabled');
+
+    // Hide all icons
+    $iconSend.style.display    = 'none';
+    $iconSpinner.style.display = 'none';
+    $iconCheck.style.display   = 'none';
+    $iconX.style.display       = 'none';
+
+    if (state === 'idle') {
+      $iconSend.style.display = '';
+      updateSendBtn();
+    } else if (state === 'sending') {
+      $iconSpinner.style.display = '';
+      $sendBtn.classList.add('sending');
+    } else if (state === 'success') {
+      // Re-trigger animation by removing and re-adding the element
+      const freshCheck = $iconCheck.cloneNode(true);
+      $iconCheck.replaceWith(freshCheck);
+      freshCheck.style.display = '';
+      $sendBtn.classList.add('success');
+    } else if (state === 'error') {
+      $iconX.style.display = '';
+      $sendBtn.classList.add('error');
+      // Re-trigger shake by forcing reflow
+      void $sendBtn.offsetWidth;
+    }
+  }
+
+  function showMessage(text, type) {
+    $statusMsg.textContent = text;
+    $statusMsg.className = 'status-msg';
+    if (text) {
+      $statusMsg.classList.add('visible');
+      if (type) $statusMsg.classList.add(type + '-msg');
+    }
+  }
+
+  function resetForm() {
+    $textarea.value = '';
+    $counter.textContent = '0 / 300';
+    $counter.classList.remove('warn');
+    category = 'Nessuna';
+    $chips.forEach(c => {
+      c.classList.toggle('selected', c.dataset.cat === 'Nessuna');
+    });
+  }
+
+  // ── onSend ──
+  async function onSend() {
+    if (sendState !== 'idle') return;
+    const text = $textarea.value.trim();
+    if (text.length < 10) return;
+
+    setSendState('sending');
+    showMessage('', null);
+
+    const params = new URLSearchParams({
+      key:       WRITE_KEY,
+      testo:     text,
+      categoria: category === 'Nessuna' ? '' : category
+    });
+
+    try {
+      const res = await fetch(WEBAPP_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params.toString()
+      });
+
+      let data;
+      try {
+        data = await res.json();
+      } catch {
+        throw new Error('invalid_json');
+      }
+
+      if (data.ok === true) {
+        setSendState('success');
+        showMessage('Pensiero aggiunto.', 'success');
+        setTimeout(() => {
+          setSendState('idle');
+          showMessage('', null);
+          resetForm();
+        }, 1800);
+      } else if (data.ok === false && data.reason === 'duplicate') {
+        setSendState('error');
+        showMessage('Pensiero già presente.', 'error');
+        setTimeout(() => {
+          setSendState('idle');
+          showMessage('', null);
+          // text remains for editing
+        }, 2000);
+      } else {
+        throw new Error('unexpected_response');
+      }
+    } catch {
+      setSendState('error');
+      showMessage('Errore di rete. Riprova.', 'error');
+      setTimeout(() => {
+        setSendState('idle');
+        showMessage('', null);
+      }, 2000);
+    }
+  }
+
+  $sendBtn.addEventListener('click', onSend);
+
+  // Allow Cmd+Enter / Ctrl+Enter to send
+  $textarea.addEventListener('keydown', e => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+      e.preventDefault();
+      onSend();
+    }
+  });
+
+  // Initial state
+  setSendState('idle');
+</script>
+</body>
+</html>
