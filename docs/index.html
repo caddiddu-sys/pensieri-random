@@ -741,32 +741,33 @@
     $sendBtn.classList.toggle('disabled', !canSend);
   }
 
+  function hideAllIcons() {
+    $sendBtn.querySelectorAll('.icon-send, .icon-spinner, .icon-check, .icon-x')
+      .forEach(el => el.style.display = 'none');
+  }
+
   function setSendState(state) {
     sendState = state;
     $sendBtn.classList.remove('sending', 'success', 'error', 'disabled');
-
-    // Hide all icons
-    $iconSend.style.display    = 'none';
-    $iconSpinner.style.display = 'none';
-    $iconCheck.style.display   = 'none';
-    $iconX.style.display       = 'none';
+    hideAllIcons();
 
     if (state === 'idle') {
-      $iconSend.style.display = '';
+      $sendBtn.querySelector('.icon-send').style.display = '';
       updateSendBtn();
     } else if (state === 'sending') {
-      $iconSpinner.style.display = '';
+      $sendBtn.querySelector('.icon-spinner').style.display = '';
       $sendBtn.classList.add('sending');
     } else if (state === 'success') {
-      // Re-trigger animation by removing and re-adding the element
-      const freshCheck = $iconCheck.cloneNode(true);
-      $iconCheck.replaceWith(freshCheck);
-      freshCheck.style.display = '';
+      // Re-trigger pn-pop by forcing reflow on the element
+      const el = $sendBtn.querySelector('.icon-check');
+      el.style.animation = 'none';
+      void el.offsetWidth;
+      el.style.animation = '';
+      el.style.display = '';
       $sendBtn.classList.add('success');
     } else if (state === 'error') {
-      $iconX.style.display = '';
+      $sendBtn.querySelector('.icon-x').style.display = '';
       $sendBtn.classList.add('error');
-      // Re-trigger shake by forcing reflow
       void $sendBtn.offsetWidth;
     }
   }
