@@ -15,15 +15,15 @@
     },
     {
       "time": "12:36",
-      "sent": false
+      "sent": true
     },
     {
       "time": "13:22",
-      "sent": false
+      "sent": true
     },
     {
       "time": "15:21",
-      "sent": false
+      "sent": true
     },
     {
       "time": "20:23",
@@ -55,7 +55,10 @@
     "505b8a89f3b9eb3b",
     "2129a2df85a6026c",
     "4589450bfbe7bb31",
-    "c118589b96942a80"
+    "c118589b96942a80",
+    "b9192794818b6eac",
+    "736ea4fc66f3d821",
+    "d5cc9c29e5d2f928"
   ],
-  "last_sent_time": "09:35"
+  "last_sent_time": "15:21"
 }
