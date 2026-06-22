@@ -168,6 +168,7 @@ def main():
         print(f"Nuovo giorno: {today}. Genero slot.")
         state["date"]  = today
         state["slots"] = generate_slots(window_start, window_end, min_per_day, max_per_day, min_gap_minutes)
+        state.pop("last_sent_time", None)  # evita gap negativo cross-day
         n_slots = len(state["slots"])
         print(f"Slot generati: {[s['time'] for s in state['slots']]} (n={n_slots}, gap={min_gap_minutes}min, finestra={window_start}-{window_end})")
         if n_slots < min_per_day:
