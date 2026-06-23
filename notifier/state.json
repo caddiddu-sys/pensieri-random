@@ -3,11 +3,11 @@
   "slots": [
     {
       "time": "07:25",
-      "sent": false
+      "sent": true
     },
     {
       "time": "08:36",
-      "sent": false
+      "sent": true
     },
     {
       "time": "14:15",
@@ -51,6 +51,9 @@
     "b9192794818b6eac",
     "736ea4fc66f3d821",
     "d5cc9c29e5d2f928",
+    "736ea4fc66f3d821",
+    "d5cc9c29e5d2f928",
     "736ea4fc66f3d821"
-  ]
+  ],
+  "last_sent_time": "08:36"
 }
