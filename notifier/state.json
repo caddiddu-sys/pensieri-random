@@ -19,7 +19,7 @@
     },
     {
       "time": "20:47",
-      "sent": false
+      "sent": true
     }
   ],
   "last_list_cache": [
@@ -65,7 +65,8 @@
     "4589450bfbe7bb31",
     "d5cc9c29e5d2f928",
     "d5cc9c29e5d2f928",
-    "4589450bfbe7bb31"
+    "4589450bfbe7bb31",
+    "d5cc9c29e5d2f928"
   ],
-  "last_sent_time": "18:24"
+  "last_sent_time": "20:47"
 }
