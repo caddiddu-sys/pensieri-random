@@ -19,7 +19,7 @@
     },
     {
       "time": "20:00",
-      "sent": false
+      "sent": true
     }
   ],
   "last_list_cache": [
@@ -34,7 +34,6 @@
     "Crea sempre un pensiero strutturato e ordinato prima di iniziare un nuovo progetto."
   ],
   "recent_hashes": [
-    "e3ebba946be8faf8",
     "62bed27d0a3ce11d",
     "736ea4fc66f3d821",
     "4589450bfbe7bb31",
@@ -68,7 +67,8 @@
     "bc3b7c159b4257bf",
     "505b8a89f3b9eb3b",
     "c118589b96942a80",
-    "505b8a89f3b9eb3b"
+    "505b8a89f3b9eb3b",
+    "b9192794818b6eac"
   ],
-  "last_sent_time": "14:57"
+  "last_sent_time": "20:00"
 }
