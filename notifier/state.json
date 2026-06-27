@@ -3,7 +3,7 @@
   "slots": [
     {
       "time": "15:57",
-      "sent": false
+      "sent": true
     },
     {
       "time": "17:13",
@@ -30,7 +30,6 @@
     "Crea sempre un pensiero strutturato e ordinato prima di iniziare un nuovo progetto."
   ],
   "recent_hashes": [
-    "62bed27d0a3ce11d",
     "736ea4fc66f3d821",
     "4589450bfbe7bb31",
     "c118589b96942a80",
@@ -64,6 +63,8 @@
     "505b8a89f3b9eb3b",
     "c118589b96942a80",
     "505b8a89f3b9eb3b",
-    "b9192794818b6eac"
-  ]
+    "b9192794818b6eac",
+    "736ea4fc66f3d821"
+  ],
+  "last_sent_time": "15:57"
 }
