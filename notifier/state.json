@@ -11,7 +11,7 @@
     },
     {
       "time": "19:35",
-      "sent": false
+      "sent": true
     }
   ],
   "last_list_cache": [
@@ -28,7 +28,6 @@
     "Non dimenticare non sempre è una cosa da ricordare."
   ],
   "recent_hashes": [
-    "b9192794818b6eac",
     "736ea4fc66f3d821",
     "d5cc9c29e5d2f928",
     "736ea4fc66f3d821",
@@ -62,7 +61,8 @@
     "4589450bfbe7bb31",
     "b9192794818b6eac",
     "99789368ae190f31",
+    "648686de9f5b579e",
     "648686de9f5b579e"
   ],
-  "last_sent_time": "11:50"
+  "last_sent_time": "19:35"
 }
