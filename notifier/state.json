@@ -3,11 +3,11 @@
   "slots": [
     {
       "time": "09:45",
-      "sent": false
+      "sent": true
     },
     {
       "time": "11:50",
-      "sent": false
+      "sent": true
     },
     {
       "time": "19:35",
@@ -28,8 +28,6 @@
     "Non dimenticare non sempre è una cosa da ricordare."
   ],
   "recent_hashes": [
-    "4589450bfbe7bb31",
-    "c118589b96942a80",
     "b9192794818b6eac",
     "736ea4fc66f3d821",
     "d5cc9c29e5d2f928",
@@ -62,6 +60,9 @@
     "4589450bfbe7bb31",
     "2129a2df85a6026c",
     "4589450bfbe7bb31",
-    "b9192794818b6eac"
-  ]
+    "b9192794818b6eac",
+    "99789368ae190f31",
+    "648686de9f5b579e"
+  ],
+  "last_sent_time": "11:50"
 }
