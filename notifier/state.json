@@ -19,7 +19,7 @@
     },
     {
       "time": "20:38",
-      "sent": false
+      "sent": true
     }
   ],
   "last_list_cache": [
@@ -37,7 +37,6 @@
     "Leggi le recensioni dei libri che hai letto."
   ],
   "recent_hashes": [
-    "736ea4fc66f3d821",
     "d5cc9c29e5d2f928",
     "505b8a89f3b9eb3b",
     "b9192794818b6eac",
@@ -71,7 +70,8 @@
     "7159038562a114dc",
     "99789368ae190f31",
     "c118589b96942a80",
-    "99789368ae190f31"
+    "99789368ae190f31",
+    "c118589b96942a80"
   ],
-  "last_sent_time": "19:06"
+  "last_sent_time": "20:38"
 }
