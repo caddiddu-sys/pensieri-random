@@ -1,21 +1,21 @@
 {
-  "date": "2026-07-10",
+  "date": "2026-07-11",
   "slots": [
     {
-      "time": "07:23",
-      "sent": true
+      "time": "07:14",
+      "sent": false
     },
     {
-      "time": "12:21",
-      "sent": true
+      "time": "16:17",
+      "sent": false
     },
     {
-      "time": "16:18",
-      "sent": true
+      "time": "19:16",
+      "sent": false
     },
     {
-      "time": "23:29",
-      "sent": true
+      "time": "22:36",
+      "sent": false
     }
   ],
   "last_list_cache": [
@@ -68,6 +68,5 @@
     "4589450bfbe7bb31",
     "bc3b7c159b4257bf",
     "736ea4fc66f3d821"
-  ],
-  "last_sent_time": "23:29"
+  ]
 }
