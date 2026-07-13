@@ -3,7 +3,7 @@
   "slots": [
     {
       "time": "08:18",
-      "sent": false
+      "sent": true
     },
     {
       "time": "10:46",
@@ -37,7 +37,6 @@
     "Leggi le recensioni dei libri che hai letto."
   ],
   "recent_hashes": [
-    "d5cc9c29e5d2f928",
     "505b8a89f3b9eb3b",
     "bc3b7c159b4257bf",
     "4589450bfbe7bb31",
@@ -71,6 +70,8 @@
     "f9bc2cd1196dcb06",
     "d5cc9c29e5d2f928",
     "2129a2df85a6026c",
-    "d5cc9c29e5d2f928"
-  ]
+    "d5cc9c29e5d2f928",
+    "4589450bfbe7bb31"
+  ],
+  "last_sent_time": "08:18"
 }
