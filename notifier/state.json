@@ -19,7 +19,7 @@
     },
     {
       "time": "16:16",
-      "sent": false
+      "sent": true
     }
   ],
   "last_list_cache": [
@@ -38,7 +38,6 @@
     "Hai messo qualcosa da parte questo mese?"
   ],
   "recent_hashes": [
-    "bc3b7c159b4257bf",
     "d5cc9c29e5d2f928",
     "736ea4fc66f3d821",
     "7159038562a114dc",
@@ -72,7 +71,8 @@
     "99789368ae190f31",
     "d5cc9c29e5d2f928",
     "7159038562a114dc",
-    "b9192794818b6eac"
+    "b9192794818b6eac",
+    "d5cc9c29e5d2f928"
   ],
-  "last_sent_time": "14:00"
+  "last_sent_time": "16:16"
 }
