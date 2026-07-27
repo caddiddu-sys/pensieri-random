@@ -15,7 +15,7 @@
     },
     {
       "time": "17:06",
-      "sent": false
+      "sent": true
     },
     {
       "time": "21:38",
@@ -38,7 +38,6 @@
     "Hai messo qualcosa da parte questo mese?"
   ],
   "recent_hashes": [
-    "505b8a89f3b9eb3b",
     "f9bc2cd1196dcb06",
     "d5cc9c29e5d2f928",
     "505b8a89f3b9eb3b",
@@ -72,7 +71,8 @@
     "d5cc9c29e5d2f928",
     "2413d15fb966638a",
     "d5cc9c29e5d2f928",
-    "b9192794818b6eac"
+    "b9192794818b6eac",
+    "7159038562a114dc"
   ],
-  "last_sent_time": "13:18"
+  "last_sent_time": "17:06"
 }
