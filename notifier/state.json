@@ -3,7 +3,7 @@
   "slots": [
     {
       "time": "12:38",
-      "sent": false
+      "sent": true
     },
     {
       "time": "17:17",
@@ -34,7 +34,6 @@
     "Hai messo qualcosa da parte questo mese?"
   ],
   "recent_hashes": [
-    "d5cc9c29e5d2f928",
     "505b8a89f3b9eb3b",
     "2413d15fb966638a",
     "4589450bfbe7bb31",
@@ -68,6 +67,8 @@
     "d5cc9c29e5d2f928",
     "b9192794818b6eac",
     "7159038562a114dc",
-    "505b8a89f3b9eb3b"
-  ]
+    "505b8a89f3b9eb3b",
+    "7159038562a114dc"
+  ],
+  "last_sent_time": "12:38"
 }
