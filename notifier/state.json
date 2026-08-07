@@ -1,25 +1,21 @@
 {
-  "date": "2026-08-07",
+  "date": "2026-08-08",
   "slots": [
     {
-      "time": "08:53",
-      "sent": true
+      "time": "08:28",
+      "sent": false
     },
     {
-      "time": "13:05",
-      "sent": true
+      "time": "10:12",
+      "sent": false
     },
     {
-      "time": "18:29",
-      "sent": true
+      "time": "13:38",
+      "sent": false
     },
     {
-      "time": "21:35",
-      "sent": true
-    },
-    {
-      "time": "22:53",
-      "sent": true
+      "time": "17:16",
+      "sent": false
     }
   ],
   "last_list_cache": [
@@ -66,7 +62,5 @@
     "2129a2df85a6026c",
     "505b8a89f3b9eb3b",
     "f9bc2cd1196dcb06"
-  ],
-  "last_sent_time": "21:55",
-  "last_sent_slot_time": "21:35"
+  ]
 }
