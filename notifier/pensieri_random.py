@@ -3,13 +3,15 @@ import json
 import hashlib
 import random
 import requests
-from datetime import datetime, date
+from datetime import datetime
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 NO_REPEAT_DAYS = 7
 STATE_FILE = os.path.join(os.path.dirname(__file__), "state.json")
 
 CONFIG_DEFAULTS = {
     "paused": False,
+    "timezone": "Europe/Rome",
     "window_start": "08:00",
     "window_end": "22:30",
     "min_per_day": 2,
@@ -90,6 +92,38 @@ def fetch_config():
     return defaults
 
 
+def parse_bool(value):
+    if isinstance(value, bool):
+        return value
+    return str(value).strip().lower() == "true"
+
+
+def normalize_config(config):
+    return {
+        "paused": parse_bool(config.get("paused", CONFIG_DEFAULTS["paused"])),
+        "timezone": str(config.get("timezone", CONFIG_DEFAULTS["timezone"])),
+        "window_start": config.get("window_start", CONFIG_DEFAULTS["window_start"]),
+        "window_end": config.get("window_end", CONFIG_DEFAULTS["window_end"]),
+        "min_per_day": int(config.get("min_per_day", CONFIG_DEFAULTS["min_per_day"])),
+        "max_per_day": int(config.get("max_per_day", CONFIG_DEFAULTS["max_per_day"])),
+        "min_gap_minutes": int(config.get("min_gap_minutes", CONFIG_DEFAULTS["min_gap_minutes"])),
+    }
+
+
+def get_local_now(config):
+    timezone_name = os.environ.get("PENSIERI_TIMEZONE") or config["timezone"]
+    try:
+        tz = ZoneInfo(timezone_name)
+    except ZoneInfoNotFoundError:
+        fallback = CONFIG_DEFAULTS["timezone"]
+        print(f"Timezone non valida {timezone_name!r}. Uso {fallback}.")
+        timezone_name = fallback
+        tz = ZoneInfo(fallback)
+    now = datetime.now(tz)
+    print(f"Ora locale ({timezone_name}): {now.isoformat(timespec='minutes')}")
+    return now
+
+
 def fetch_pensieri(state):
     read_url = os.environ.get("PENSIERI_READ_URL", "")
     read_key = os.environ.get("READ_KEY", "")
@@ -147,40 +181,12 @@ def choose_pensiero(pensieri, recent_hashes):
     return random.choice(available) if available else None
 
 
-def main():
-    config = fetch_config()
-
-    if config.get("paused", False):
-        print("Sistema in pausa. Nessuna notifica inviata.")
-        return
-
-    window_start    = config.get("window_start",    CONFIG_DEFAULTS["window_start"])
-    window_end      = config.get("window_end",      CONFIG_DEFAULTS["window_end"])
-    min_per_day     = int(config.get("min_per_day",    CONFIG_DEFAULTS["min_per_day"]))
-    max_per_day     = int(config.get("max_per_day",    CONFIG_DEFAULTS["max_per_day"]))
-    min_gap_minutes = int(config.get("min_gap_minutes", CONFIG_DEFAULTS["min_gap_minutes"]))
-
-    state = load_state()
-    today = date.today().isoformat()
-    now_minutes = datetime.now().hour * 60 + datetime.now().minute
-
-    if state.get("date") != today:
-        print(f"Nuovo giorno: {today}. Genero slot.")
-        state["date"]  = today
-        state["slots"] = generate_slots(window_start, window_end, min_per_day, max_per_day, min_gap_minutes)
-        state.pop("last_sent_time", None)  # evita gap negativo cross-day
-        n_slots = len(state["slots"])
-        print(f"Slot generati: {[s['time'] for s in state['slots']]} (n={n_slots}, gap={min_gap_minutes}min, finestra={window_start}-{window_end})")
-        if n_slots < min_per_day:
-            print(f"[ATTENZIONE] Solo {n_slots} slot generati su min_per_day={min_per_day}. Finestra troppo stretta?")
-
-    pensieri = fetch_pensieri(state)
-    if not pensieri:
-        save_state(state)
-        return
-
+def process_due_slots(state, pensieri, config, now_minutes):
     recent_hashes = state.get("recent_hashes", [])
-    end_minutes   = time_to_minutes(window_end)
+    end_minutes = time_to_minutes(config["window_end"])
+    min_gap_minutes = config["min_gap_minutes"]
+    max_per_day = config["max_per_day"]
+    max_slot_delay_minutes = max(60, min_gap_minutes)
     state_changed = False
 
     for slot in state["slots"]:
@@ -198,6 +204,16 @@ def main():
             state_changed = True
             continue
 
+        delay = now_minutes - slot_minutes
+        if delay > max_slot_delay_minutes:
+            print(
+                f"Slot {slot['time']} scaduto da {delay} min "
+                f"(limite {max_slot_delay_minutes} min). Salto."
+            )
+            slot["sent"] = True
+            state_changed = True
+            continue
+
         last_sent = state.get("last_sent_time")
         if last_sent:
             gap = now_minutes - time_to_minutes(last_sent)
@@ -208,10 +224,51 @@ def main():
         pensiero = choose_pensiero(pensieri, recent_hashes)
         if pensiero and send_notification(pensiero):
             slot["sent"] = True
-            state["last_sent_time"] = slot["time"]
+            state["last_sent_time"] = minutes_to_time(now_minutes)
+            state["last_sent_slot_time"] = slot["time"]
             recent_hashes.append(hash_text(pensiero))
             state["recent_hashes"] = recent_hashes[-(NO_REPEAT_DAYS * max_per_day):]
             state_changed = True
+            break
+
+    return state_changed
+
+
+def main():
+    config = normalize_config(fetch_config())
+
+    if config.get("paused", False):
+        print("Sistema in pausa. Nessuna notifica inviata.")
+        return
+
+    now = get_local_now(config)
+    window_start = config["window_start"]
+    window_end = config["window_end"]
+    min_per_day = config["min_per_day"]
+    max_per_day = config["max_per_day"]
+    min_gap_minutes = config["min_gap_minutes"]
+
+    state = load_state()
+    today = now.date().isoformat()
+    now_minutes = now.hour * 60 + now.minute
+
+    if state.get("date") != today:
+        print(f"Nuovo giorno: {today}. Genero slot.")
+        state["date"]  = today
+        state["slots"] = generate_slots(window_start, window_end, min_per_day, max_per_day, min_gap_minutes)
+        state.pop("last_sent_time", None)  # evita gap negativo cross-day
+        state.pop("last_sent_slot_time", None)
+        n_slots = len(state["slots"])
+        print(f"Slot generati: {[s['time'] for s in state['slots']]} (n={n_slots}, gap={min_gap_minutes}min, finestra={window_start}-{window_end})")
+        if n_slots < min_per_day:
+            print(f"[ATTENZIONE] Solo {n_slots} slot generati su min_per_day={min_per_day}. Finestra troppo stretta?")
+
+    pensieri = fetch_pensieri(state)
+    if not pensieri:
+        save_state(state)
+        return
+
+    state_changed = process_due_slots(state, pensieri, config, now_minutes)
 
     if state_changed or "last_list_cache" in state:
         save_state(state)
