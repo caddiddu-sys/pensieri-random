@@ -11,7 +11,7 @@
     },
     {
       "time": "18:29",
-      "sent": false
+      "sent": true
     },
     {
       "time": "21:35",
@@ -39,7 +39,6 @@
   ],
   "recent_hashes": [
     "648686de9f5b579e",
-    "648686de9f5b579e",
     "f9bc2cd1196dcb06",
     "2413d15fb966638a",
     "b9192794818b6eac",
@@ -65,8 +64,9 @@
     "7159038562a114dc",
     "d5cc9c29e5d2f928",
     "648686de9f5b579e",
-    "2129a2df85a6026c"
+    "2129a2df85a6026c",
+    "505b8a89f3b9eb3b"
   ],
-  "last_sent_time": "13:31",
-  "last_sent_slot_time": "13:05"
+  "last_sent_time": "18:59",
+  "last_sent_slot_time": "18:29"
 }
