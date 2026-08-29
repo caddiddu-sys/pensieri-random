@@ -3,7 +3,7 @@
   "slots": [
     {
       "time": "11:00",
-      "sent": false
+      "sent": true
     },
     {
       "time": "14:17",
